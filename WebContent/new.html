@@ -1,0 +1,78 @@
+<h1>маи яе CHOCO!</h1>
+
+<body>
+	<canvas id="canvas"></canvas>
+	<script type="text/javascript" src="jwt-decode.js"></script>
+	<script src="bundle.js"></script>
+	
+	<p id='choco'></p>
+	<input id="clickMe" type="button" value="clickme" onclick="clicker();" />
+<!-- 	<p id = 'response_server'></p>
+	<p id = 'response_body'></p> -->
+	<div id = 'student'>
+	
+	</div>
+	<script>
+	function clicker(){
+	var xhr = new XMLHttpRequest();
+	const session2= document.getElementById('choco').value;
+	xhr.open('GET', "https://demo.irmacard.org/tomcat/irma_api_server/api/v2/verification/"+ session2 + "/getproof", true);
+	xhr.send();
+	 
+	xhr.onreadystatechange = processRequest;
+	function processRequest(e) {
+		if (xhr.status == 400){
+			document.getElementById('response_server').innerHTML = "Session Expired";
+		}
+	    if (xhr.readyState == 4 && xhr.status == 200) {
+	        var response = (xhr.responseText);
+	        //document.getElementById('response_server').innerHTML = response;
+	        var Json_response = parseJwt(response);
+	      //  document.getElementById('response_body').innerHTML = JSON.stringify(Json_response);
+	    	if (Json_response.attributes == null){
+	    		console.log("attributes --> null");
+	    	}
+	    	else{
+	    		find_attr(Json_response)
+	    	}
+	    }
+	}}
+	
+	function find_attr(Json_format){
+		var new_format = JSON.stringify(Json_format);
+	//	var new_format = Json_format;
+		new_format = new_format.replace("\"sub\"", "sub");
+		new_format = new_format.replace("\"iss\"", "iss");
+		new_format = new_format.replace("\"attributes\"", "attributes");
+		new_format = new_format.replace("\"irma-demo.RU.studentCard.level\"", "irma-demo.RU.studentCard.level");
+		new_format = new_format.replace("\"irma-demo.RU.studentCard.studentID\"", "irma-demo.RU.studentCard.studentID");
+		new_format = new_format.replace("\"exp\"", "exp");
+		new_format = new_format.replace("\"iat\"", "iat");
+		new_format = new_format.replace("\"jti\"", "jti");
+		new_format = new_format.replace("\"status\"", "status");
+		new_format = new_format.replace("{sub:\"disclosure_result\",iss:\"api-demo.irmacard.org\",attributes:{irma-demo.RU.studentCard.level:\"","");
+		const role_str = new_format.substr(0,7);
+		
+		if(role_str.valueOf()=="Student"){
+			//document.getElementById('role').innerHTML="Student";
+			//document.getElementById('student_id').innerHTML= new_format.substr(45,8);
+			const sid = new_format.substr(45,8);
+			document.getElementById('student').innerHTML="<p>You are a student and your sID is " +  new_format.substr(45,8) + "</p>" + "<input id=\"EnterNTUA\" type=\"button\" value=\"Enter\" onclick=\"location.href='student_page.html?student_id=" +sid +"';\" />";
+		}
+		else{
+			document.getElementById('role').innerHTML="Teacher";
+			document.getElementById('student_id').innerHTML= new_format.substr(45,8);
+		}
+		
+		//console.log(new_format.substr(0,7));
+		//var test_format = JSON.parse(change_format);
+		//console.log(test_format);
+	}
+	
+	function parseJwt (token) {
+        var base64Url = token.split('.')[1];
+        var base64 = base64Url.replace('-', '+').replace('_', '/');
+        return JSON.parse(window.atob(base64));
+    };
+	</script>
+</body>
